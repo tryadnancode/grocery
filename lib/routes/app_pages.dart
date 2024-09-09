@@ -8,7 +8,7 @@ import '../grocery/grocery_details/grocery_details_screen.dart';
 
 class AppPages{
   static final List<GetPage> pages = [
-    GetPage(name: AppRoute.screen, page: ()=> GroceryScreen()),
+    GetPage(name: AppRoute.screen, page: ()=>  GroceryScreen()),
     GetPage(name: AppRoute.detail, page: ()=>   GroceryDetailsScreen(categoryTitle: '',)),
     GetPage(name: AppRoute.create, page: ()=> const CreateGroceryListScreen(),binding: CreateGroceryBinding()),
     GetPage(name: AppRoute.shopping, page: ()=>const ShoppingList()),

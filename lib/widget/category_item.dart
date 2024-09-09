@@ -5,6 +5,8 @@ class CategoryItem extends StatelessWidget {
   final Color iconColor; // Updated to control the icon color
   final VoidCallback onPressed;
   final VoidCallback onNavigate;
+  final VoidCallback? onLongPress; // Optional callback for long press
+
 
   const CategoryItem({
     super.key,
@@ -12,11 +14,15 @@ class CategoryItem extends StatelessWidget {
     required this.iconColor, // Use this for the icon color
     required this.onPressed,
     required this.onNavigate,
+    this.onLongPress, // Use this for long press
+
   });
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(top: 5, left: 15, right: 15),
+    child: GestureDetector(
+    onLongPress: onLongPress,
       child: Container(
         width: double.infinity,
         height: 70,
@@ -51,9 +57,11 @@ class CategoryItem extends StatelessWidget {
           ],
         ),
       ),
+    ),
     );
   }
 }
+
 
 
 

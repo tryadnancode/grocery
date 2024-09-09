@@ -30,97 +30,68 @@
 //       onUpgrade: (db, oldVersion, newVersion) async {
 //         if (oldVersion < 4) {
 //           // Example upgrade: Add new columns or modify schema
-//            await db.execute('ALTER TABLE items ADD COLUMN new_column TEXT');
+//           await db.execute('ALTER TABLE items ADD COLUMN new_column TEXT');
 //         }
 //       },
 //     );
 //   }
 //
 //   Future<int> insertItem(String name, String color) async {
-//     try {
-//       final db = await database;
-//       int result = await db.insert(
-//         'items',
-//         {
-//           'name': name,
-//           'color': color,
-//         },
-//         conflictAlgorithm: ConflictAlgorithm.replace,
-//       );
-//       print('Inserted Item: $name');
-//       return result;
-//     } catch (e) {
-//       print('Error inserting item: $e');
-//       rethrow;
-//     }
+//     final db = await database;
+//     int result = await db.insert(
+//       'items',
+//       {
+//         'name': name,
+//         'color': color,
+//       },
+//       conflictAlgorithm: ConflictAlgorithm.replace,
+//     );
+//     print('Inserted Item: $name');
+//     return result;
 //   }
 //
 //   Future<List<GroceryItem>> fetchItems() async {
-//     try {
-//       final db = await database;
-//       final List<Map<String, dynamic>> maps = await db.query('items');
-//       print('Fetched Items: $maps');
-//       return List.generate(maps.length, (i) {
-//         return GroceryItem.fromMap(maps[i]);
-//       });
-//     } catch (e) {
-//       print('Error fetching items: $e');
-//       rethrow;
-//     }
+//     final db = await database;
+//     final List<Map<String, dynamic>> maps = await db.query('items');
+//     print('Fetched Items: $maps');
+//     return List.generate(maps.length, (i) {
+//       return GroceryItem.fromMap(maps[i]);
+//     });
 //   }
 //
 //   Future<int> deleteItem(String name) async {
-//     try {
-//       final db = await database;
-//       return await db.delete(
-//         'items',
-//         where: 'name = ?',
-//         whereArgs: [name],
-//       );
-//     } catch (e) {
-//       print('Error deleting item: $e');
-//       rethrow;
-//     }
+//     final db = await database;
+//     return await db.delete(
+//       'items',
+//       where: 'name = ?',
+//       whereArgs: [name],
+//     );
 //   }
 //
 //   Future<bool> itemExists(String name) async {
-//     try {
-//       final db = await database;
-//       final List<Map<String, dynamic>> result = await db.query(
-//         'items',
-//         where: 'name = ?',
-//         whereArgs: [name],
-//       );
-//       return result.isNotEmpty;
-//     } catch (e) {
-//       print('Error checking if item exists: $e');
-//       rethrow;
-//     }
+//     final db = await database;
+//     final List<Map<String, dynamic>> result = await db.query(
+//       'items',
+//       where: 'name = ?',
+//       whereArgs: [name],
+//     );
+//     return result.isNotEmpty;
 //   }
 //
 //   Future<void> closeDatabase() async {
-//     try {
-//       final db = _database;
-//       if (db != null && db.isOpen) {
-//         await db.close();
-//         _database = null; // Set to null after closing to avoid reuse
-//       }
-//     } catch (e) {
-//       print('Error closing database: $e');
-//       rethrow;
+//     final db = _database;
+//     if (db != null && db.isOpen) {
+//       await db.close();
+//       _database = null; // Set to null after closing to avoid reuse
 //     }
 //   }
-//
 // }
 //
 //
 //
-
-
-
-
-
-
+//
+//
+//
 import 'dart:async';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
@@ -144,20 +115,25 @@ class DatabaseHelper {
     print('Database Path: $path'); // Log the database path for debugging
     return await openDatabase(
       path,
-      version: 4,
+      version: 5,
       onCreate: (db, version) async {
         await db.execute(
           'CREATE TABLE items(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, color TEXT NOT NULL)',
         );
+        await db.execute(
+          'CREATE TABLE IF NOT EXISTS categories(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL)', // Add IF NOT EXISTS
+        );
       },
       onUpgrade: (db, oldVersion, newVersion) async {
-        if (oldVersion < 4) {
-          // Example upgrade: Add new columns or modify schema
-          await db.execute('ALTER TABLE items ADD COLUMN new_column TEXT');
+        if (oldVersion < 5) {
+          await db.execute(
+            'CREATE TABLE IF NOT EXISTS categories(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL)', // Add IF NOT EXISTS
+          );
         }
       },
     );
   }
+
 
   Future<int> insertItem(String name, String color) async {
     final db = await database;
@@ -191,6 +167,27 @@ class DatabaseHelper {
     );
   }
 
+  Future<int> insertCategory(String name) async {
+    final db = await database;
+    int result = await db.insert(
+      'categories',
+      {'name': name},
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+    print('Inserted Category: $name');
+    return result;
+  }
+
+  // Future<List<String>> fetchCategories() async {
+  //   final db = await database;
+  //   final List<Map<String, dynamic>> maps = await db.query('categories');
+  //   print('Fetched Categories: $maps');
+  //   return List.generate(maps.length, (i) {
+  //     return maps[i]['name']; // Ensure you get the category name
+  //   });
+  // }
+
+
   Future<bool> itemExists(String name) async {
     final db = await database;
     final List<Map<String, dynamic>> result = await db.query(
@@ -208,4 +205,21 @@ class DatabaseHelper {
       _database = null; // Set to null after closing to avoid reuse
     }
   }
+  Future<List<String>> fetchCategories() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query('categories'); // Fetch from the categories table
+    return List.generate(maps.length, (i) {
+      return maps[i]['name']; // Assuming 'name' is the column for category names
+    });
+  }
+
+  Future<int> deleteCategory(String name) async {
+    final db = await database;
+    return await db.delete(
+      'categories',
+      where: 'name = ?',
+      whereArgs: [name],
+    );
+  }
+
 }
