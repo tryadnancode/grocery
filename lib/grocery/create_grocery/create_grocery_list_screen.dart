@@ -160,8 +160,6 @@
 //
 //
 
-
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:grocery/widget/color_picker.dart';
@@ -173,7 +171,7 @@ class CreateGroceryListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final CreateGroceryController controller =
-    Get.put(CreateGroceryController());
+        Get.put(CreateGroceryController());
 
     void _openColorPicker() async {
       final color = await showDialog<MaterialColor>(
@@ -190,6 +188,9 @@ class CreateGroceryListScreen extends StatelessWidget {
               ),
             );
           });
+      if (color != null) {
+        controller.setColor(color);
+      }
     }
 
     return Scaffold(
@@ -262,9 +263,12 @@ class CreateGroceryListScreen extends StatelessWidget {
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
                   onPressed: () {
-                    controller.addCategory(controller.categoryController.text);
+                    _openColorPicker();
                   },
-                  icon: const Icon(Icons.add),
+                  icon: Obx(() => Icon(
+                        Icons.circle,
+                        color: controller.selectedColor.value,
+                      )),
                 ),
               ),
             ),
@@ -288,7 +292,7 @@ class CreateGroceryListScreen extends StatelessWidget {
           children: [
             ElevatedButton(
               onPressed: () {
-                // Pass the items back to the previous screen
+                controller.addCategory(controller.categoryController.text);
                 Navigator.pop(context, controller.items.toList());
               },
               style: ElevatedButton.styleFrom(

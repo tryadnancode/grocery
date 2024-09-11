@@ -21,7 +21,7 @@ class GroceryController extends GetxController{
   void addItem(String item) async {
     if (item.isNotEmpty) {
       items.insert(0, item);
-      await dbHelper.insertItem(item,selectedColor.string); // Insert item into the database
+      await dbHelper.insertItem(item, selectedColor.value.value.toString()); // Convert color to string
       itemController.clear();
     }
   }
@@ -33,7 +33,7 @@ class GroceryController extends GetxController{
 
   void fetchItems() async {
     List<GroceryItem> storedItems = await dbHelper.fetchItems();
-    items.assignAll(storedItems.map((item) => item.name).toList()); // Ensure `name` is being mapped correctly
+    items.assignAll(storedItems.map((item) => item.name).toList());
   }
 
   String getCategory() => categoryController.text;

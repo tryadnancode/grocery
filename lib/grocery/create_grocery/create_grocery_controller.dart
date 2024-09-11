@@ -48,6 +48,12 @@
 //
 //
 //
+
+
+
+
+
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../grocery_item/grocery_item.dart';
@@ -55,8 +61,8 @@ import '../../repo/database_helper.dart';
 
 class CreateGroceryController extends GetxController {
   var items = <String>[].obs;
-  var categories = <String>[].obs;
-  var selectedColor = Colors.red.obs;
+  var categories = <String, MaterialColor>{}.obs; // Map of categories to colors
+  var selectedColor = Colors.red.obs; // Default color
   var itemController = TextEditingController();
   var categoryController = TextEditingController();
 
@@ -72,7 +78,7 @@ class CreateGroceryController extends GetxController {
   void addItem(String item) async {
     if (item.isNotEmpty) {
       items.insert(0, item);
-      await dbHelper.insertItem(item, selectedColor.string);
+      await dbHelper.insertItem(item, selectedColor.value.value.toString()); // Convert color to string
       itemController.clear();
     }
   }
@@ -87,25 +93,26 @@ class CreateGroceryController extends GetxController {
     items.assignAll(storedItems.map((item) => item.name).toList());
   }
 
-  // void fetchCategories() async {
-  //   List<String> storedCategories = await dbHelper.fetchCategories(); // Fetch categories
-  //   categories.assignAll(storedCategories); // Update the categories list
-  // }
   Future<void> fetchCategories() async {
-    // Fetch categories from the database and update the observable list
-    List<String> fetchedCategories = await dbHelper.fetchCategories(); // Implement this method in your DatabaseHelper
-    categories.assignAll(fetchedCategories);
+    List<Map<String, dynamic>> fetchedCategories = await dbHelper.fetchCategories(); // Modify fetch method to return a list of maps
+    categories.assignAll({
+      for (var category in fetchedCategories)
+        category['name']: MaterialColor(int.parse(category['color']), {}), // Convert string to MaterialColor
+    });
   }
+
   void setColor(MaterialColor color) {
     selectedColor.value = color;
   }
 
   void addCategory(String categoryName) async {
     if (categoryName.isNotEmpty) {
-      await dbHelper.insertCategory(categoryName);
+      await dbHelper.insertCategory(categoryName, selectedColor.value.value.toString()); // Convert color to string
+      categories[categoryName] = selectedColor.value; // Update categories map
       categoryController.clear(); // Clear after adding
     }
   }
+
   void deleteCategory(String category) async {
     // Remove the category from the list
     categories.remove(category);

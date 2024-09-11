@@ -92,6 +92,8 @@
 //
 //
 //
+
+
 import 'dart:async';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
@@ -115,34 +117,30 @@ class DatabaseHelper {
     print('Database Path: $path'); // Log the database path for debugging
     return await openDatabase(
       path,
-      version: 5,
+      version: 6, // Incremented version for schema change
       onCreate: (db, version) async {
         await db.execute(
           'CREATE TABLE items(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, color TEXT NOT NULL)',
         );
         await db.execute(
-          'CREATE TABLE IF NOT EXISTS categories(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL)', // Add IF NOT EXISTS
+          'CREATE TABLE IF NOT EXISTS categories(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, color TEXT NOT NULL)', // Added color column
         );
       },
       onUpgrade: (db, oldVersion, newVersion) async {
-        if (oldVersion < 5) {
+        if (oldVersion < 6) {
           await db.execute(
-            'CREATE TABLE IF NOT EXISTS categories(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL)', // Add IF NOT EXISTS
+            'ALTER TABLE categories ADD COLUMN color TEXT NOT NULL DEFAULT "000000"', // Add color column with default value
           );
         }
       },
     );
   }
 
-
   Future<int> insertItem(String name, String color) async {
     final db = await database;
     int result = await db.insert(
       'items',
-      {
-        'name': name,
-        'color': color,
-      },
+      {'name': name, 'color': color},
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
     print('Inserted Item: $name');
@@ -167,26 +165,31 @@ class DatabaseHelper {
     );
   }
 
-  Future<int> insertCategory(String name) async {
+  Future<int> insertCategory(String name, String color) async {
     final db = await database;
     int result = await db.insert(
       'categories',
-      {'name': name},
+      {'name': name, 'color': color},
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
     print('Inserted Category: $name');
     return result;
   }
 
-  // Future<List<String>> fetchCategories() async {
-  //   final db = await database;
-  //   final List<Map<String, dynamic>> maps = await db.query('categories');
-  //   print('Fetched Categories: $maps');
-  //   return List.generate(maps.length, (i) {
-  //     return maps[i]['name']; // Ensure you get the category name
-  //   });
-  // }
+  Future<List<Map<String, dynamic>>> fetchCategories() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query('categories');
+    return maps; // Return all fields including color
+  }
 
+  Future<int> deleteCategory(String name) async {
+    final db = await database;
+    return await db.delete(
+      'categories',
+      where: 'name = ?',
+      whereArgs: [name],
+    );
+  }
 
   Future<bool> itemExists(String name) async {
     final db = await database;
@@ -205,21 +208,4 @@ class DatabaseHelper {
       _database = null; // Set to null after closing to avoid reuse
     }
   }
-  Future<List<String>> fetchCategories() async {
-    final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query('categories'); // Fetch from the categories table
-    return List.generate(maps.length, (i) {
-      return maps[i]['name']; // Assuming 'name' is the column for category names
-    });
-  }
-
-  Future<int> deleteCategory(String name) async {
-    final db = await database;
-    return await db.delete(
-      'categories',
-      where: 'name = ?',
-      whereArgs: [name],
-    );
-  }
-
 }

@@ -17,10 +17,10 @@ class GroceryItem {
 
   factory GroceryItem.fromMap(Map<String, dynamic> map) {
     return GroceryItem(
-      id: map['id'],
-      name: map['name'],
-      color: map['color'],
-      category: map ['category'],
+      id: map['id']??'',
+      name: map['name']??'',
+      color: map['color']??'',
+      category: map ['category']??'',
     );
   }
 }
